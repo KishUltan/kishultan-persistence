@@ -28,18 +28,16 @@ public class ThreadSafetyTest {
     
     @Before
     public void setUp() {
-        // 设置全局默认值为本地数据源（用于未设置线程本地值的线程）
-        DataSourceManager.setGlobalUseJNDI(false);
-        // 设置当前线程（主线程）使用本地数据源
-        DataSourceManager.setUseJNDI(false);
-        
         // 创建测试数据源（使用 H2 的 JdbcDataSource，不依赖外部连接池）
         org.h2.jdbcx.JdbcDataSource dataSource = new org.h2.jdbcx.JdbcDataSource();
         dataSource.setURL("jdbc:h2:mem:thread_safety_test;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE");
         dataSource.setUser("sa");
         dataSource.setPassword("");
         
+        // 添加本地数据源后，所有线程默认会自动使用本地数据源（不需要手动设置）
         DataSourceManager.addLocalDataSource("default", dataSource);
+        // 可选：显式设置当前线程使用本地数据源（覆盖自动判断）
+        DataSourceManager.setUseJNDI(false);
     }
     
     /**
