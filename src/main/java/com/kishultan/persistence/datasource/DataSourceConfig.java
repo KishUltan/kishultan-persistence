@@ -72,6 +72,8 @@ public class DataSourceConfig {
         dscLogger.info("检查本地数据源配置...");
         if (dscLocalDataSources.size() > 0) {
             dscLogger.info("发现 " + dscLocalDataSources.size() + " 个本地数据源，开始初始化...");
+            // 注意：添加本地数据源后，所有线程会自动使用本地数据源（isUseJNDI()会自动判断）
+            // 此调用是可选的，仅用于显式设置当前线程
             DataSourceManager.setUseJNDI(false);
             try {
                 for (int i = 0; i < dscLocalDataSources.size(); i++) {

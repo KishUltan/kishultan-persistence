@@ -13,14 +13,13 @@ import java.sql.SQLException;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.locks.StampedLock;
 
 /**
  * 数据源管理器
  * <p>
- * 支持JNDI数据源和本地数据源的管理
- * 线程安全实现，使用StampedLock提供更好的读写性能
+ * 支持JNDI数据源和本地数据源的管理。
+ * 当配置了本地数据源时，所有线程默认使用本地数据源（自动判断，无需额外设置）。
+ * 线程安全实现，使用ThreadLocal确保每个线程可以独立配置。
  */
 public class DataSourceManager {
     private static final Logger logger = LoggerFactory.getLogger(DataSourceManager.class);
@@ -28,12 +27,6 @@ public class DataSourceManager {
     // 使用ThreadLocal为每个线程存储独立的JNDI配置
     // 这样每个线程的设置不会影响其他线程
     private static final ThreadLocal<Boolean> threadLocalUseJNDI = new ThreadLocal<>();
-    
-    // 全局默认值（用于未设置线程本地值的线程）
-    private static final AtomicBoolean globalUseJNDI = new AtomicBoolean(true);
-    
-    // 使用StampedLock提供更好的读写性能（用于全局默认值的读写）
-    private static final StampedLock stateLock = new StampedLock();
     private static final Map<String, DataSource> localDSTable = new ConcurrentHashMap<>();
     private static final Map<String, String> dsFlavorsTable = new ConcurrentHashMap<>();
     // 连接池统计信息
@@ -42,8 +35,13 @@ public class DataSourceManager {
     /**
      * 获取当前是否使用JNDI
      * <p>
-     * 线程安全的方法：优先返回线程本地值，如果没有则返回全局默认值
-     * 使用ThreadLocal确保每个线程有独立的配置，互不干扰
+     * 线程安全的方法：
+     * 1. 优先返回线程本地值（如果已通过setUseJNDI设置）
+     * 2. 如果没有线程本地值，则根据是否有本地数据源自动判断：
+     *    - 有本地数据源（localDSTable不为空）→ 返回false（不使用JNDI）
+     *    - 无本地数据源（localDSTable为空）→ 返回true（使用JNDI）
+     * <p>
+     * 这样，当配置了本地数据源时，所有线程默认使用本地数据源，无需额外设置
      */
     public static boolean isUseJNDI() {
         // 优先检查线程本地值
@@ -51,15 +49,19 @@ public class DataSourceManager {
         if (threadLocalValue != null) {
             return threadLocalValue;
         }
-        // 如果没有线程本地值，返回全局默认值
-        return globalUseJNDI.get();
+        // 如果没有线程本地值，根据是否有本地数据源自动判断
+        // 有本地数据源 = 不使用JNDI（false）
+        // 无本地数据源 = 使用JNDI（true）
+        return localDSTable.isEmpty();
     }
 
     /**
-     * 设置是否使用JNDI（当前线程）
+     * 设置当前线程是否使用JNDI数据源
      * <p>
-     * 线程安全的方法：设置线程本地值，不影响其他线程
-     * 每个线程可以独立设置自己的JNDI模式
+     * 这是一个线程本地设置，只影响当前线程，不影响其他线程。
+     * 如果不调用此方法，线程会根据是否有本地数据源自动判断（见isUseJNDI()）。
+     * 
+     * @param useJNDIValue true表示使用JNDI数据源，false表示使用本地数据源
      */
     public static void setUseJNDI(boolean useJNDIValue) {
         Boolean oldValue = threadLocalUseJNDI.get();
@@ -76,31 +78,13 @@ public class DataSourceManager {
     }
     
     /**
-     * 清除当前线程的JNDI配置（恢复为使用全局默认值）
+     * 清除当前线程的JNDI配置（恢复为自动判断模式）
      * <p>
-     * 在线程结束时调用，避免ThreadLocal内存泄漏
+     * 在线程结束时调用，避免ThreadLocal内存泄漏。
+     * 清除后，线程会根据是否有本地数据源自动判断是否使用JNDI。
      */
     public static void clearThreadLocalUseJNDI() {
         threadLocalUseJNDI.remove();
-    }
-    
-    /**
-     * 设置全局默认的JNDI模式（影响所有未设置线程本地值的线程）
-     * <p>
-     * 谨慎使用：这会改变全局默认值，影响所有新线程
-     */
-    public static void setGlobalUseJNDI(boolean useJNDIValue) {
-        long stamp = stateLock.writeLock();
-        try {
-            boolean oldValue = globalUseJNDI.getAndSet(useJNDIValue);
-            if (oldValue != useJNDIValue) {
-                logger.info("全局数据源模式从 {} 更改为: {}",
-                        oldValue ? "JNDI" : "本地",
-                        useJNDIValue ? "JNDI" : "本地");
-            }
-        } finally {
-            stateLock.unlockWrite(stamp);
-        }
     }
 
     /**
