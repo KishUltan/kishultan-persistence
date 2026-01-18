@@ -1,8 +1,8 @@
 package com.kishultan.persistence;
 
-import com.kishultan.persistence.orm.SqlExecutor;
-import com.kishultan.persistence.orm.SqlFunction;
-import com.kishultan.persistence.orm.SqlVarArgsFunction;
+import com.kishultan.persistence.SqlExecutor;
+import com.kishultan.persistence.SqlFunction;
+import com.kishultan.persistence.SqlVarArgsFunction;
 import org.junit.Test;
 import static org.junit.Assert.*;
 

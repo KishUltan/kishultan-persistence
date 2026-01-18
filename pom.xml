@@ -6,13 +6,13 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.kishultan</groupId>
-    <artifactId>persistence-orm</artifactId>
+    <artifactId>kishultan-persistence</artifactId>
     <version>1.0.0-SNAPSHOT</version>
     <packaging>jar</packaging>
 
-    <name>Persistence ORM</name>
+    <name>Kishultan Persistence</name>
     <description>A lightweight, type-safe ORM framework with powerful query builder, streaming support, and performance monitoring</description>
-    <url>https://github.com/kishultan/persistence-orm</url>
+    <url>https://github.com/KishUltan/kishultan-persistence</url>
 
     <licenses>
         <license>
@@ -30,9 +30,9 @@
     </developers>
 
     <scm>
-        <connection>scm:git:git://github.com/kishultan/persistence-orm.git</connection>
-        <developerConnection>scm:git:ssh://github.com/kishultan/persistence-orm.git</developerConnection>
-        <url>https://github.com/kishultan/persistence-orm</url>
+        <connection>scm:git:git://github.com/KishUltan/kishultan-persistence.git</connection>
+        <developerConnection>scm:git:ssh://github.com/KishUltan/kishultan-persistence.git</developerConnection>
+        <url>https://github.com/KishUltan/kishultan-persistence</url>
         <tag>HEAD</tag>
     </scm>
 
@@ -56,9 +56,9 @@
         <java.version>1.8</java.version>
         
         <!-- Dependency versions -->
-        <sansorm.version>3.8-beta</sansorm.version>
+        <sansorm.version>3.9-SNAPSHOT</sansorm.version>
         <slf4j.version>1.7.36</slf4j.version>
-        <jpa.version>2.2</jpa.version>
+        <jpa.version>3.1.0</jpa.version>
         <junit.version>4.13.2</junit.version>
         <h2.version>2.1.214</h2.version>
         <mysql.version>8.0.33</mysql.version>
@@ -80,11 +80,11 @@
             <version>${slf4j.version}</version>
         </dependency>
 
-        <!-- JPA API -->
+        <!-- JPA API - Jakarta EE 10 -->
         <dependency>
-            <groupId>javax.persistence</groupId>
-            <artifactId>javax.persistence-api</artifactId>
-            <version>${jpa.version}</version>
+            <groupId>jakarta.persistence</groupId>
+            <artifactId>jakarta.persistence-api</artifactId>
+            <version>3.1.0</version>
         </dependency>
 
 
@@ -121,11 +121,11 @@
             <scope>test</scope>
         </dependency>
 
-        <!-- HikariCP Connection Pool (test scope) -->
+        <!-- Mockito for testing -->
         <dependency>
-            <groupId>com.zaxxer</groupId>
-            <artifactId>HikariCP</artifactId>
-            <version>5.0.1</version>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-core</artifactId>
+            <version>4.11.0</version>
             <scope>test</scope>
         </dependency>
     </dependencies>

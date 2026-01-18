@@ -1,9 +1,8 @@
 package com.kishultan.persistence;
 
-import com.kishultan.persistence.orm.EntityManager;
+import com.kishultan.persistence.EntityManager;
 import com.kishultan.persistence.PersistenceManager;
 import com.kishultan.persistence.datasource.DataSourceManager;
-import com.zaxxer.hikari.HikariDataSource;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -24,12 +23,10 @@ public class TransactionTest {
         // 初始化数据源
         DataSourceManager.setUseJNDI(false);
         
-        // 创建H2数据源
-        //org.apache.commons.dbcp2.BasicDataSource dataSource = new org.apache.commons.dbcp2.BasicDataSource();
-        HikariDataSource dataSource = new HikariDataSource();
-        dataSource.setDriverClassName("org.h2.Driver");
-        dataSource.setJdbcUrl("jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE");
-        dataSource.setUsername("sa");
+        // 创建H2数据源（使用 H2 的 JdbcDataSource，不依赖外部连接池）
+        org.h2.jdbcx.JdbcDataSource dataSource = new org.h2.jdbcx.JdbcDataSource();
+        dataSource.setURL("jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE");
+        dataSource.setUser("sa");
         dataSource.setPassword("");
         
         DataSourceManager.addLocalDataSource("default", dataSource);
@@ -67,6 +64,16 @@ public class TransactionTest {
     
     @After
     public void tearDown() throws Exception {
+        // 清理事务状态
+        if (entityManager != null && entityManager.isTransactionActive()) {
+            try {
+                entityManager.closeTransaction();
+            } catch (Exception e) {
+                // 忽略清理错误
+            }
+        }
+        
+        
         // 清理数据源
         DataSourceManager.removeLocalDataSource("default");
         DataSourceManager.setUseJNDI(true);
@@ -249,23 +256,23 @@ public class TransactionTest {
     }
     
     // 测试实体类
-    @javax.persistence.Entity
-    @javax.persistence.Table(name = "accounts")
+    @jakarta.persistence.Entity
+    @jakarta.persistence.Table(name = "accounts")
     public static class Account {
-        @javax.persistence.Id
-        @javax.persistence.GeneratedValue(strategy = javax.persistence.GenerationType.IDENTITY)
+        @jakarta.persistence.Id
+        @jakarta.persistence.GeneratedValue(strategy = jakarta.persistence.GenerationType.IDENTITY)
         private Integer id;
         
-        @javax.persistence.Column(name = "account_number")
+        @jakarta.persistence.Column(name = "account_number")
         private String accountNumber;
         
-        @javax.persistence.Column(name = "balance")
+        @jakarta.persistence.Column(name = "balance")
         private BigDecimal balance;
         
-        @javax.persistence.Column(name = "status")
+        @jakarta.persistence.Column(name = "status")
         private String status;
         
-        @javax.persistence.Column(name = "created_time")
+        @jakarta.persistence.Column(name = "created_time")
         private Date createdTime;
         
         // Getters and Setters
@@ -285,29 +292,29 @@ public class TransactionTest {
         public void setCreatedTime(Date createdTime) { this.createdTime = createdTime; }
     }
     
-    @javax.persistence.Entity
-    @javax.persistence.Table(name = "transactions")
+    @jakarta.persistence.Entity
+    @jakarta.persistence.Table(name = "transactions")
     public static class Transaction {
-        @javax.persistence.Id
-        @javax.persistence.GeneratedValue(strategy = javax.persistence.GenerationType.IDENTITY)
+        @jakarta.persistence.Id
+        @jakarta.persistence.GeneratedValue(strategy = jakarta.persistence.GenerationType.IDENTITY)
         private Integer id;
         
-        @javax.persistence.Column(name = "from_account_id")
+        @jakarta.persistence.Column(name = "from_account_id")
         private Integer fromAccountId;
         
-        @javax.persistence.Column(name = "to_account_id")
+        @jakarta.persistence.Column(name = "to_account_id")
         private Integer toAccountId;
         
-        @javax.persistence.Column(name = "amount")
+        @jakarta.persistence.Column(name = "amount")
         private BigDecimal amount;
         
-        @javax.persistence.Column(name = "transaction_type")
+        @jakarta.persistence.Column(name = "transaction_type")
         private String transactionType;
         
-        @javax.persistence.Column(name = "status")
+        @jakarta.persistence.Column(name = "status")
         private String status;
         
-        @javax.persistence.Column(name = "created_time")
+        @jakarta.persistence.Column(name = "created_time")
         private Date createdTime;
         
         // Getters and Setters

@@ -1,6 +1,6 @@
 package com.kishultan.persistence.model;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 import java.util.List;
 
 /**
@@ -15,7 +15,7 @@ public class TestClinic {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
-    private Long id;
+    private Integer id;
     
     @Column(name = "name")
     private String name;
@@ -49,11 +49,11 @@ public class TestClinic {
     private List<TestContact> contacts;
     
     // Getters and Setters
-    public Long getId() {
+    public Integer getId() {
         return id;
     }
     
-    public void setId(Long id) {
+    public void setId(Integer id) {
         this.id = id;
     }
     

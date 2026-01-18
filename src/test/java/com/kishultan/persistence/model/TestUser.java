@@ -1,6 +1,6 @@
 package com.kishultan.persistence.model;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 
 /**
  * 测试用户实体类

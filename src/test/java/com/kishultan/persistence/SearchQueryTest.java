@@ -1,9 +1,5 @@
 package com.kishultan.persistence;
 
-import com.kishultan.persistence.orm.EntityManager;
-import com.kishultan.persistence.orm.EntityQuery;
-import com.kishultan.persistence.PersistenceManager;
-import com.kishultan.persistence.orm.QueryCondition;
 import com.kishultan.persistence.model.TestClinic;
 import com.kishultan.persistence.datasource.DataSourceManager;
 import com.kishultan.persistence.config.PersistenceDefaults;

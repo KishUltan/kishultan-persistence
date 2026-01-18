@@ -6,7 +6,7 @@ This package contains the new data source management architecture that replaces 
 
 ### DataSourceManager
 - **Purpose**: Manages database connections and data sources
-- **Location**: `com.kishultan.persistence.datasource.DataSourceManager`
+- **Location**: `com.kishultan.datasource.persistence.DataSourceManager`
 - **Key Methods**:
   - `getConnection()`: Get a database connection
   - `getDataSource()`: Get a data source by name
@@ -16,7 +16,7 @@ This package contains the new data source management architecture that replaces 
 
 ### DataSourceConfig
 - **Purpose**: Manages database configuration and XML parsing
-- **Location**: `com.kishultan.persistence.datasource.DataSourceConfig`
+- **Location**: `com.kishultan.datasource.persistence.DataSourceConfig`
 - **Key Methods**:
   - `init()`: Initialize configuration from file or stream
   - `getInstance()`: Get the singleton instance

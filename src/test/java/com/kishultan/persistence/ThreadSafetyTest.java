@@ -1,9 +1,9 @@
 package com.kishultan.persistence;
 
 import com.kishultan.persistence.datasource.DataSourceManager;
-import com.kishultan.persistence.orm.EntityManager;
+import com.kishultan.persistence.EntityManager;
 import com.kishultan.persistence.PersistenceManager;
-import com.zaxxer.hikari.HikariDataSource;
+import javax.sql.DataSource;
 import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -28,23 +28,16 @@ public class ThreadSafetyTest {
     
     @Before
     public void setUp() {
-        // 设置本地数据源用于测试
+        // 设置全局默认值为本地数据源（用于未设置线程本地值的线程）
+        DataSourceManager.setGlobalUseJNDI(false);
+        // 设置当前线程（主线程）使用本地数据源
         DataSourceManager.setUseJNDI(false);
         
-        // 创建测试数据源，增加连接池大小
-        //org.apache.commons.dbcp2.BasicDataSource dataSource = new org.apache.commons.dbcp2.BasicDataSource();
-        HikariDataSource dataSource = new HikariDataSource();
-        dataSource.setDriverClassName("org.h2.Driver");
-        dataSource.setJdbcUrl("jdbc:h2:mem:thread_safety_test;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE");
-        dataSource.setUsername("sa");
+        // 创建测试数据源（使用 H2 的 JdbcDataSource，不依赖外部连接池）
+        org.h2.jdbcx.JdbcDataSource dataSource = new org.h2.jdbcx.JdbcDataSource();
+        dataSource.setURL("jdbc:h2:mem:thread_safety_test;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE");
+        dataSource.setUser("sa");
         dataSource.setPassword("");
-        
-        // 增加连接池配置，确保有足够的连接
-//        dataSource.setInitialSize(20);
-//        dataSource.setMaxTotal(50);
-//        dataSource.setMaxIdle(20);
-//        dataSource.setMinIdle(10);
-//        dataSource.setMaxWaitMillis(10000);
         
         DataSourceManager.addLocalDataSource("default", dataSource);
     }
@@ -128,15 +121,20 @@ public class ThreadSafetyTest {
                         try {
                             // 交替设置JNDI模式
                             boolean useJNDI = (j % 2 == 0);
+                            
+                            // 测试setUseJNDI()和isUseJNDI()的线程安全性
+                            // 使用ThreadLocal后，每个线程的设置是独立的，不会互相干扰
                             DataSourceManager.setUseJNDI(useJNDI);
                             
-                            // 验证设置是否生效
+                            // 读取当前值（应该是刚才设置的值，因为使用ThreadLocal）
                             boolean currentUseJNDI = DataSourceManager.isUseJNDI();
+                            
+                            // 验证设置和读取的值一致（使用ThreadLocal后应该100%一致）
                             if (currentUseJNDI == useJNDI) {
                                 successCount.incrementAndGet();
                             } else {
                                 errorCount.incrementAndGet();
-                                logger.error("线程 {} 第 {} 次迭代：设置值 {} 与当前值 {} 不匹配", 
+                                logger.error("线程 {} 第 {} 次迭代：设置值 {} 与读取值 {} 不匹配", 
                                            threadId, j, useJNDI, currentUseJNDI);
                             }
                         } catch (Exception e) {
@@ -144,6 +142,8 @@ public class ThreadSafetyTest {
                             logger.error("线程 {} 第 {} 次迭代失败", threadId, j, e);
                         }
                     }
+                    // 清理线程本地变量，避免内存泄漏
+                    DataSourceManager.clearThreadLocalUseJNDI();
                 } finally {
                     latch.countDown();
                 }
@@ -164,7 +164,7 @@ public class ThreadSafetyTest {
         logger.info("测试完成 - 总操作数: {}, 成功: {}, 失败: {}", 
                    totalOperations, successCount.get(), errorCount.get());
         
-        // 现在应该完全线程安全，期望所有操作成功
+        // 验证所有操作都成功（使用ThreadLocal后，每个线程的设置和读取应该100%一致）
         assert successCount.get() == totalOperations : 
             "期望所有操作成功，但实际成功: " + successCount.get() + ", 失败: " + errorCount.get();
         assert errorCount.get() == 0 : 
@@ -190,6 +190,9 @@ public class ThreadSafetyTest {
             final int threadId = i;
             executor.submit(() -> {
                 try {
+                    // 设置当前线程使用本地数据源
+                    DataSourceManager.setUseJNDI(false);
+                    
                     // 每个线程使用独立的EntityManager实例
                     EntityManager em = PersistenceManager.getManager("default");
                     
@@ -208,6 +211,8 @@ public class ThreadSafetyTest {
                             logger.error("线程 {} 第 {} 次迭代失败", threadId, j, e);
                         }
                     }
+                    // 清理线程本地变量
+                    DataSourceManager.clearThreadLocalUseJNDI();
                 } finally {
                     latch.countDown();
                 }
@@ -253,6 +258,9 @@ public class ThreadSafetyTest {
             final int threadId = i;
             executor.submit(() -> {
                 try {
+                    // 设置当前线程使用本地数据源
+                    DataSourceManager.setUseJNDI(false);
+                    
                     for (int j = 0; j < iterationsPerThread; j++) {
                         try {
                             // 每次迭代都创建新的EntityManager实例
@@ -269,6 +277,8 @@ public class ThreadSafetyTest {
                             logger.error("线程 {} 第 {} 次迭代失败", threadId, j, e);
                         }
                     }
+                    // 清理线程本地变量
+                    DataSourceManager.clearThreadLocalUseJNDI();
                 } finally {
                     latch.countDown();
                 }

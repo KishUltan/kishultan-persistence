@@ -1,48 +1,69 @@
 package com.kishultan.persistence.config;
 
+import java.util.Locale;
+
 /**
- * 持久化默认配置类
- * 
- * 提供默认数据源名称等配置信息
- * 用于替代原项目中的 com.kishultan.foundation.Defaults
- * 
- * @author Portal Team
+ * 默认配置类
+ * 用于存储默认的数据源名称和其他配置
  */
 public class PersistenceDefaults {
-    
-    private static String defaultDataSourceName = "default";
-    
+    private static String dDataSource = "default";
+    private static String dDigestAlgorithm = null; //"MD5";
+    private static Locale dLocale = new Locale("zh", "CN");
+
     /**
-     * 获取默认数据源名称
-     * 
-     * 优先级：
-     * 1. 系统属性 persistence.default.datasource
-     * 2. 静态配置 defaultDataSourceName
-     * 
-     * @return 默认数据源名称
+     * Returns string representing the default datasource's name.
+     *
+     * @return Datasource name.
      */
     public static String getDataSourceName() {
-        String name = System.getProperty("persistence.default.datasource");
-        return name != null ? name : defaultDataSourceName;
+        return dDataSource;
     }
-    
+
     /**
-     * 设置默认数据源名称
-     * 
-     * @param dataSourceName 数据源名称
+     * Set the default datasource name.
+     *
+     * @param newDS The new datasource name to be set.
      */
-    public static void setDataSourceName(String dataSourceName) {
-        if (dataSourceName != null && !dataSourceName.trim().isEmpty()) {
-            defaultDataSourceName = dataSourceName;
-        }
+    public static void setDataSourceName(String newDS) {
+        dDataSource = newDS;
     }
-    
+
     /**
-     * 重置为默认值
+     * Returns the default encryption algorithm.
+     * <code>null</code> if the encryption is not used.
+     *
+     * @return The name of the algorithm.
      */
-    public static void reset() {
-        defaultDataSourceName = "default";
+    public static String getEncryptionAlgorithm() {
+        return dDigestAlgorithm;
+    }
+
+    /**
+     * Sets the default encryption algorithm.
+     * Set to <code>null</code> if encryption is not used.
+     *
+     * @param algorithm The algorithm name.
+     */
+    public static void setEncryptionAlgorithm(String algorithm) {
+        dDigestAlgorithm = algorithm;
+    }
+
+    /**
+     * Returns the default locale.
+     *
+     * @return The default locale.
+     */
+    public static Locale getLocale() {
+        return dLocale;
+    }
+
+    /**
+     * Set the default locale.
+     *
+     * @param locale The new locale to be set.
+     */
+    public static void setLocale(Locale locale) {
+        dLocale = locale;
     }
 }
-
-
